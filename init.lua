@@ -270,7 +270,7 @@ require('lazy').setup({
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`.
   --
-  -- See `:help gitsigns` to understand what the configuration keys do
+  -- See `:help gitsigns` to understand what th-- LSP Pluginse configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -348,16 +348,22 @@ require('lazy').setup({
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
         { '<leader>c', group = '[C]ode ', mode = { 'n' } }, -- group
+        { '<leader>e', group = 'File [E]xplorer ', mode = { 'n' } }, -- group
+        { '<leader>b', group = '[B]uffer', mode = { 'n' } }, -- group
+        { '<leader>h', group = '[H]arpoon', mode = { 'n' } }, -- group
       },
     },
     keys = {
+      -- Code action
       { '<leader>cr', vim.lsp.buf.rename, desc = '[R]ename' },
       { '<leader>ca', vim.lsp.buf.code_action, desc = 'Code [A]ction' },
+      -- Nvim Tree action
+      { '<leader>ef', ':NvimTreeFocus<CR>', desc = '[F]ocus explorer' },
+      { '<leader>ev', ':NvimTreeToggle<CR>', desc = 'Toggle Explorer' },
     },
   },
 
-  -- Auto pair plugin
-  {
+  { -- Auto pair plugin
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
     config = true,
@@ -396,7 +402,7 @@ require('lazy').setup({
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
-      -- it can fuzzy find! It's more than just a "file finder", it can search
+      -- it can fuzzy find! It's more than just a "", it can search
       -- many different aspects of Neovim, your workspace, LSP, and more!
       --
       -- The easiest way to use Telescope, is to start by doing something like:
@@ -475,8 +481,7 @@ require('lazy').setup({
     end,
   },
 
-  -- LSP Plugins
-  {
+  { -- LSP Plugins
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
     -- used for completion, annotations and signatures of Neovim apis
     'folke/lazydev.nvim',
@@ -792,7 +797,7 @@ require('lazy').setup({
     end,
   },
 
-  {
+  { -- Lastplace open file on last change
     'farmergreg/vim-lastplace',
     lazy = false,
   },
@@ -874,8 +879,6 @@ require('lazy').setup({
     end,
   },
 
-  -- vim .keymap .set('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true, desc = 'Toggl[E] file explorer' })
-  --
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',
@@ -996,7 +999,7 @@ require('lazy').setup({
       vim.cmd.colorscheme 'tokyonight-night'
     end,
   },
-  {
+  { -- Rose pine color shema
     'rose-pine/neovim',
     name = 'rose-pine',
     config = function()
@@ -1004,8 +1007,12 @@ require('lazy').setup({
     end,
   },
 
-  -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  { -- Highlight todo, notes, etc in comments
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -1070,6 +1077,149 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  { -- Mini buffermove
+    'echasnovski/mini.bufremove',
+    version = false,
+    config = function()
+      vim.keymap.set('n', '<leader>bd', function()
+        require('mini.bufremove').delete(0, false)
+      end, { desc = 'Delete Buffer' })
+      vim.keymap.set('n', '<leader>bD', function()
+        require('mini.bufremove').delete(0, true)
+      end, { desc = 'Delete Buffer (Force)' })
+    end,
+  },
+
+  { 'akinsho/toggleterm.nvim', version = '*', opts = true },
+  { -- Bufferline
+    'akinsho/bufferline.nvim',
+    version = '*',
+    diagnostics = 'nvim_lsp',
+    dependencies = { 'nvim-tree/nvim-web-devicons', 'folke/which-key.nvim' },
+    config = function()
+      require('bufferline').setup {
+        options = {
+          numbers = 'ordinal',
+          offsets = { { filetype = 'NvimTree', text = 'File Explorer', separator = true } },
+          show_buffer_close_icons = true,
+          show_close_icon = false,
+        },
+      }
+
+      vim.keymap.set('n', '<leader>bn', ':BufferLineCycleNext<CR>', { desc = '[N]ext buffer' })
+      vim.keymap.set('n', '<leader>bp', ':BufferLineCyclePrev<CR>', { desc = '[P]rev buffer' })
+    end,
+  },
+
+  { -- Persistence session
+    'folke/persistence.nvim',
+    event = 'BufReadPre', -- this will only start session saving when an actual file was opened
+    opts = {
+      -- add any custom options here
+    },
+    config = function()
+      local wk = require 'which-key'
+      local pers = require 'persistence'
+      wk.add({
+        { '<leader>x', group = '[S]ession', mode = { 'n' } },
+
+        {
+          '<leader>xs',
+          function()
+            pers.load()
+          end,
+          desc = '[A]dd file',
+        },
+        {
+          '<leader>xS',
+          function()
+            pers.select()
+          end,
+          desc = '[S]elect session',
+        },
+        {
+          '<leader>xl',
+          function()
+            pers.load { last = true }
+          end,
+          desc = '[L]oad session',
+        },
+      }, { prefix = '<leader>' })
+    end,
+  },
+
+  { --Harpoon
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+
+      harpoon:setup()
+
+      local wk = require 'which-key'
+      wk.add({
+        { '<leader>h', group = '[H]arpoon', mode = { 'n' } },
+        {
+          '<leader>ha',
+          function()
+            harpoon:list():add()
+          end,
+          desc = '[A]dd file',
+        },
+        {
+          '<leader>hm',
+          function()
+            harpoon.ui:toggle_quick_menu(harpoon:list())
+          end,
+          desc = '[M]enu',
+        },
+        {
+          '<leader>h1',
+          function()
+            harpoon:list():select(1)
+          end,
+          desc = '[1] file',
+        },
+        {
+          '<leader>h2',
+          function()
+            harpoon:list():select(2)
+          end,
+          desc = '[2] file',
+        },
+        {
+          '<leader>h3',
+          function()
+            harpoon:list():select(3)
+          end,
+          desc = '[3] file',
+        },
+        {
+          '<leader>h4',
+          function()
+            harpoon:list():select(4)
+          end,
+          desc = '[4] file',
+        },
+        {
+          '<leader>hn',
+          function()
+            harpoon:list():next()
+          end,
+          desc = '[N]ext',
+        },
+        {
+          '<leader>hp',
+          function()
+            harpoon:list():prev()
+          end,
+          desc = '[P]prev',
+        },
+        -- {'<leader>a',function() harpoon:list():add() end, desc = "[]"},
+      }, { prefix = '<leader>' })
+    end,
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1130,6 +1280,44 @@ vim.keymap.set('n', '<leader>cv', function()
   vim.cmd 'colorscheme rose-pine'
   print('Switched to rose-pine-' .. variant[index])
 end, { desc = 'Cycle Rose Pine Variants' })
+
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
+vim.o.foldlevel = 99 -- Start with all folds open
+vim.o.foldenable = true
+
+local harpoon = require 'harpoon'
+harpoon:setup {}
+
+-- basic telescope configuration
+local conf = require('telescope.config').values
+local function toggle_telescope(harpoon_files)
+  local file_paths = {}
+  for _, item in ipairs(harpoon_files.items) do
+    table.insert(file_paths, item.value)
+  end
+
+  require('telescope.pickers')
+    .new({}, {
+      prompt_title = 'Harpoon',
+      finder = require('telescope.finders').new_table {
+        results = file_paths,
+      },
+      previewer = conf.file_previewer {},
+      sorter = conf.generic_sorter {},
+    })
+    :find()
+end
+
+-- vim.keymap.set('n', '<C-e>', function() toggle_telescope(harpoon:list()) end, { desc = 'Open harpoon window' })
+vim.keymap.set('n', '<C-/>', ':ToggleTerm<cr>', { desc = 'Toogle Terminal' })
+
+vim.filetype.add {
+  extension = {
+    jsx = 'javascriptreact',
+    tsx = 'typescriptreact',
+  },
+}
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 --
